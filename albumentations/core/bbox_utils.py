@@ -429,9 +429,15 @@ def convert_bboxes_from_albumentations(
 
 
 def check_bbox(bbox: BoxType) -> None:
-    """Check if bbox boundaries are in range 0, 1 and minimums are lesser then maximums"""
+    """Check if bbox boundaries are in range 0, 1 and minimums are lesser then maximums
+
+    @author Jared Hand
+    February 2024
+    Increase tolerance for bound under/overshoots.  As long as either 1)
+    |val| < 1e-3 or 2) |val - 1| < 1e-3, then let things be.
+    """
     for name, value in zip(["x_min", "y_min", "x_max", "y_max"], bbox[:4]):
-        if not 0 <= value <= 1 and not np.isclose(value, 0) and not np.isclose(value, 1):
+        if not 0 <= value <= 1 and not np.isclose(value, 0, rtol=0., atol=1e-3) and not np.isclose(value, 1, rtol=0., atol=1e-3):
             raise ValueError(f"Expected {name} for bbox {bbox} to be in the range [0.0, 1.0], got {value}.")
     x_min, y_min, x_max, y_max = bbox[:4]
     if x_max <= x_min:
