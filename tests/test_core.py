@@ -162,24 +162,38 @@ def test_check_bboxes_with_correct_values():
         pytest.fail("Unexpected Exception {!r}".format(e))
 
 
+"""
+@author Jared Hand
+February 2024
+
+Updated the following three tests to reflect changes in bbox_utils.checkbboxes()
+"""
+
+
 def test_check_bboxes_with_values_less_than_zero():
-    with pytest.raises(ValueError) as exc_info:
-        check_bboxes([[0.2, 0.5, 0.5, 0.6, 99], [-0.1, 0.5, 0.8, 1.0]])
-    message = "Expected x_min for bbox [-0.1, 0.5, 0.8, 1.0] to be in the range [0.0, 1.0], got -0.1."
-    assert str(exc_info.value) == message
+    bboxes = [[0.2, 0.5, 0.5, 0.6, 99], [-0.1, 0.5, 0.8, 1.0]]
+    bboxes = check_bboxes(bboxes)
+    assert bboxes[1][0] == 0.
+    # with pytest.raises(ValueError) as exc_info:
+    #     check_bboxes([[0.2, 0.5, 0.5, 0.6, 99], [-0.1, 0.5, 0.8, 1.0]])
+    # message = "Expected x_min for bbox [-0.1, 0.5, 0.8, 1.0] to be in the range [0.0, 1.0], got -0.1."
+    # assert str(exc_info.value) == message
 
 
 def test_check_bboxes_with_values_greater_than_one():
-    with pytest.raises(ValueError) as exc_info:
-        check_bboxes([[0.2, 0.5, 1.5, 0.6, 99], [0.1, 0.5, 0.8, 1.0]])
-    message = "Expected x_max for bbox [0.2, 0.5, 1.5, 0.6, 99] to be in the range [0.0, 1.0], got 1.5."
-    assert str(exc_info.value) == message
+    bboxes = [[0.2, 0.5, 1.5, 0.6, 99], [0.1, 0.5, 0.8, 1.0]]
+    bboxes = check_bboxes(bboxes)
+    assert bboxes[0][2] == 1.
+    # with pytest.raises(ValueError) as exc_info:
+    #     check_bboxes([[0.2, 0.5, 1.5, 0.6, 99], [0.1, 0.5, 0.8, 1.0]])
+    # message = "Expected x_max for bbox [0.2, 0.5, 1.5, 0.6, 99] to be in the range [0.0, 1.0], got 1.5."
+    # assert str(exc_info.value) == message
 
 
 def test_check_bboxes_with_end_greater_that_start():
     with pytest.raises(ValueError) as exc_info:
         check_bboxes([[0.8, 0.5, 0.7, 0.6, 99], [0.1, 0.5, 0.8, 1.0]])
-    message = "x_max is less than or equal to x_min for bbox [0.8, 0.5, 0.7, 0.6, 99]."
+    message = "x_max is less than or equal to x_min for bbox (0.8, 0.5, 0.7, 0.6, 99)."
     assert str(exc_info.value) == message
 
 

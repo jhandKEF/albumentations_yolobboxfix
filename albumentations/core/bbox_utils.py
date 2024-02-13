@@ -132,8 +132,13 @@ class BboxProcessor(DataProcessor):
             min_height=self.params.min_height,
         )
 
-    def check(self, data: Sequence, rows: int, cols: int) -> None:
-        check_bboxes(data)
+    def check(self, data: Sequence, rows: int, cols: int) -> Sequence:
+        """
+        @author Jared Hand.
+        February 2024
+        Updated to return updated check_boxes.
+        """
+        return check_bboxes(data)
 
     def convert_from_albumentations(self, data: Sequence, rows: int, cols: int) -> List[BoxType]:
         return convert_bboxes_from_albumentations(data, self.params.format, rows, cols, check_validity=True)
@@ -349,7 +354,8 @@ def convert_bbox_to_albumentations(
     if source_format != "yolo":
         bbox = normalize_bbox(bbox, rows, cols)
     if check_validity:
-        check_bbox(bbox)
+        # @author Jared Hand.  Updated to return checked bbox.
+        bbox = check_bbox(bbox)
     return bbox
 
 
@@ -382,8 +388,8 @@ def convert_bbox_from_albumentations(
             f"Unknown target_format {target_format}. Supported formats are: 'coco', 'pascal_voc' and 'yolo'"
         )
     if check_validity:
-        check_bbox(bbox)
-
+        # @author Jared Hand.  Updated to return checked bbox.
+        bbox = check_bbox(bbox)
     if target_format != "yolo":
         bbox = denormalize_bbox(bbox, rows, cols)
     if target_format == "coco":
@@ -428,14 +434,16 @@ def convert_bboxes_from_albumentations(
     return [convert_bbox_from_albumentations(bbox, target_format, rows, cols, check_validity) for bbox in bboxes]
 
 
-def check_bbox(bbox: BoxType) -> None:
+def check_bbox(bbox: BoxType) -> BoxType:
     """Check if bbox boundaries are in range 0, 1 and minimums are lesser then maximums
 
     @author Jared Hand
     February 2024
     If x_min, y_min < 0, then set to 0.  If x_max, y_max > 1, then set to 1.
+    Also, now returns the checked bbox object.
     """
     (x_min, y_min, x_max, y_max), tail = bbox[:4], tuple(bbox[4:])
+
     if x_min < 0.:
         x_min = 0.
     if y_min < 0.:
@@ -457,11 +465,19 @@ def check_bbox(bbox: BoxType) -> None:
     if y_max <= y_min:
         raise ValueError(f"y_max is less than or equal to y_min for bbox {bbox}.")
 
+    return bbox
+
 
 def check_bboxes(bboxes: Sequence[BoxType]) -> None:
-    """Check if bboxes boundaries are in range 0, 1 and minimums are lesser then maximums"""
-    for bbox in bboxes:
-        check_bbox(bbox)
+    """Check if bboxes boundaries are in range 0, 1 and minimums are lesser then maximums
+
+    @author Jared Hand
+    February 2024
+    Altered to return checked bboxes.
+    """
+    return [check_bbox(bbox) for bbox in bboxes]
+    # for bbox in bboxes:
+    #     check_bbox(bbox)
 
 
 def filter_bboxes(
