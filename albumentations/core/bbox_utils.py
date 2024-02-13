@@ -433,13 +433,25 @@ def check_bbox(bbox: BoxType) -> None:
 
     @author Jared Hand
     February 2024
-    Increase tolerance for bound under/overshoots.  As long as either 1)
-    |val| < 1e-3 or 2) |val - 1| < 1e-3, then let things be.
+    If x_min, y_min < 0, then set to 0.  If x_max, y_max > 1, then set to 1.
     """
-    for name, value in zip(["x_min", "y_min", "x_max", "y_max"], bbox[:4]):
-        if not 0 <= value <= 1 and not np.isclose(value, 0, rtol=0., atol=1e-3) and not np.isclose(value, 1, rtol=0., atol=1e-3):
-            raise ValueError(f"Expected {name} for bbox {bbox} to be in the range [0.0, 1.0], got {value}.")
-    x_min, y_min, x_max, y_max = bbox[:4]
+    (x_min, y_min, x_max, y_max), tail = bbox[:4], tuple(bbox[4:])
+    if x_min < 0.:
+        x_min = 0.
+    if y_min < 0.:
+        y_min = 0.
+
+    if x_max > 1.:
+        x_max = 1.
+    if y_max > 1.:
+        y_max = 1.
+    # for i, value in enumerate(bbox[:4]):
+        # if not 0 <= value <= 1 and not np.isclose(value, 0, rtol=0., atol=1e-2) and not np.isclose(value, 1, rtol=0., atol=1e-2):
+        #     raise ValueError(f"Expected {name} for bbox {bbox} to be in the range [0.0, 1.0], got {value}.")
+
+    bbox = (x_min, y_min, x_max, y_max) + tuple(tail)
+
+    # x_min, y_min, x_max, y_max = bbox[:4]
     if x_max <= x_min:
         raise ValueError(f"x_max is less than or equal to x_min for bbox {bbox}.")
     if y_max <= y_min:
